@@ -1,0 +1,110 @@
+% =============================================================================
+% Rapport de Projet — SecurAccess : Contrôle d'Accès Biométrique
+% Biométrie et Tatouage Numérique
+% =============================================================================
+\documentclass[12pt,a4paper]{report}
+
+% ── Packages ─────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{titlesec}
+\usepackage{setspace}
+
+% ── Configuration de la page ─────────────────────────────────────────────────
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\setstretch{1.15}
+
+% ── Couleurs ─────────────────────────────────────────────────────────────────
+\definecolor{mainblue}{HTML}{1f6feb}
+\definecolor{darkbg}{HTML}{0d1117}
+\definecolor{accentgreen}{HTML}{238636}
+\definecolor{accentred}{HTML}{da3633}
+\definecolor{codebg}{HTML}{f6f8fa}
+\definecolor{codeframe}{HTML}{d0d7de}
+
+% ── Style des listings ───────────────────────────────────────────────────────
+\lstset{
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{mainblue}\bfseries,
+    commentstyle=\color{accentgreen},
+    stringstyle=\color{accentred},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=4,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    captionpos=b
+}
+
+% ── En-têtes et pieds de page ────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{gray}{SecurAccess — Project Report}}
+\fancyhead[R]{\small\textcolor{gray}{Biometrics and Watermarking}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Boîtes colorées ─────────────────────────────────────────────────────────
+\newtcolorbox{infobox}[1][]{colback=mainblue!5, colframe=mainblue!70, title=#1, fonttitle=\bfseries}
+\newtcolorbox{warnbox}[1][]{colback=accentred!5, colframe=accentred!70, title=#1, fonttitle=\bfseries}
+\newtcolorbox{successbox}[1][]{colback=accentgreen!5, colframe=accentgreen!70, title=#1, fonttitle=\bfseries}
+
+% ── Placeholder pour captures d'écran ────────────────────────────────────────
+\newcommand{\screenshotplaceholder}[3][0.85]{%
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=#1\textwidth]{images/#3.png}
+        \caption{#2}
+        \label{fig:#3}
+    \end{figure}
+}
+
+% ── Hyperlinks ───────────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=mainblue,
+    urlcolor=mainblue,
+    citecolor=mainblue
+}
+
+% =============================================================================
+\begin{document}
+
+% ── PAGE DE GARDE ────────────────────────────────────────────────────────────
+\input{sections/titlepage}
+
+% ── TABLE DES MATIÈRES ───────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ── CHAPITRES ────────────────────────────────────────────────────────────────
+\input{sections/introduction}
+\input{sections/architecture}
+\input{sections/algorithmes}
+\input{sections/performance}
+\input{sections/attaques}
+\input{sections/interface}
+\input{sections/conclusion}
+
+\end{document}

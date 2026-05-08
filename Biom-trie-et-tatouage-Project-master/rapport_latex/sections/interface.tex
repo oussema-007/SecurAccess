@@ -1,0 +1,107 @@
+% =============================================================================
+% Chapter 6 — User Interface
+% =============================================================================
+\chapter{User Interface}
+
+\section{Visual Theme}
+
+The application uses a professional dark theme inspired by GitHub Dark, with a consistent palette:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{llll}
+        \toprule
+        \textbf{Element} & \textbf{Color} & \textbf{Hex Code} & \textbf{Usage} \\
+        \midrule
+        Main Background      & Bluish Black  & \texttt{\#0d1117} & Global background \\
+        Secondary Background & Dark Gray     & \texttt{\#161b22} & Cards, panels \\
+        Blue Accent          & Bright Blue   & \texttt{\#1f6feb} & Main buttons \\
+        Green Accent         & Green         & \texttt{\#238636} & Access authorized \\
+        Red Accent           & Red           & \texttt{\#da3633} & Access denied, alerts \\
+        Main Text            & Off-white     & \texttt{\#e6edf3} & Regular text \\
+        \bottomrule
+    \end{tabular}
+    \caption{SecurAccess theme color palette}
+\end{table}
+
+\section{Application Pages}
+
+\subsection{Login Page}
+
+The login page displays the real-time webcam feed in a 640$\times$360 pixel area. The user clicks "Scan My Face" to launch authentication in a dedicated thread (\texttt{ScanWorker}) so as not to block the interface.
+
+\screenshotplaceholder{Login page with active webcam feed}{page-login}
+
+\subsection{Welcome Page}
+
+After successful authentication, the user reaches a personalized page displaying:
+\begin{itemize}[nosep]
+    \item Their name and colored role badge
+    \item A grid of sections where access depends on the role
+    \item Locked sections are visible but dimmed with a "Available with [ROLE]" badge
+    \item Clicking on a restricted section opens an upgrade dialog
+\end{itemize}
+
+\screenshotplaceholder{Welcome page — User view with USER role}{page-welcome-user}
+
+\screenshotplaceholder{Welcome page — Restricted section with upgrade dialog}{page-welcome-locked}
+
+\subsection{Access Denied Page}
+
+Displayed when a recognized but unauthorized user (\texttt{UNAUTHORIZED} role or inactive account) attempts to log in.
+
+\screenshotplaceholder{Access Denied page}{page-access-denied}
+
+\subsection{Unknown Face Page}
+
+Displayed when the captured face does not match any template in the database. Offers a link to the enrollment form.
+
+\screenshotplaceholder{Unknown Face page}{page-unknown}
+
+\subsection{Enrollment Page}
+
+A form allowing an unknown face to submit a registration request (name, email, note). The request can be reviewed by the administrator.
+
+\screenshotplaceholder{Enrollment request form}{page-enrollment}
+
+\section{Administrator Dashboard}
+
+The admin dashboard consists of a top bar, a navigation sidebar, and 7 panels:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Panel} & \textbf{Icon} & \textbf{Functionality} \\
+        \midrule
+        Overview           & 📊 & Global statistics (cards + counters) \\
+        Users              & 👥 & List of registered users \\
+        Enrollment Requests & 📝 & Approve/reject requests \\
+        Access Logs        & 📋 & Complete log with status and confidence \\
+        Alerts             & 🚨 & Security alerts by level \\
+        Integrity Check    & 🔏 & HMAC audit of all logs \\
+        Settings           & ⚙️ & System configuration \\
+        \bottomrule
+    \end{tabular}
+    \caption{Administrator dashboard panels}
+\end{table}
+
+\screenshotplaceholder{Admin dashboard — Overview with statistics}{dashboard-overview}
+
+\screenshotplaceholder{Admin dashboard — Enrollment requests}{dashboard-requests}
+
+\screenshotplaceholder{Admin dashboard — Access logs with watermarking}{dashboard-logs}
+
+\screenshotplaceholder{Admin dashboard — Security alerts panel}{dashboard-alertes}
+
+\section{Proposed Interface Improvements}
+
+As part of the project's evolution, the following improvements are planned:
+
+\begin{enumerate}
+    \item \textbf{Visual Feedback on Camera} — Draw a green rectangle around the detected face in real-time on the webcam feed, with a border animation during the scan.
+    \item \textbf{Animated Spinner} — Replace the "Scanning..." text with a visual loading animation.
+    \item \textbf{Color-coded Logs} — Color the log table rows based on status (green = authorized, red = denied, orange = unknown).
+    \item \textbf{Icons in Statistics Cards} — Add SVG icons to the dashboard cards to improve readability.
+    \item \textbf{Optimized Typography} — Reduce the global font size from 20px to 14--16px for better information density.
+\end{enumerate}

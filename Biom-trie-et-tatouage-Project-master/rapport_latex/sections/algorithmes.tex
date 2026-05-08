@@ -1,0 +1,187 @@
+% =============================================================================
+% Chapter 3 — Algorithms Used
+% =============================================================================
+\chapter{Algorithms and Technical Justifications}
+
+\section{Authentication Pipeline}
+
+The authentication flow follows a sequential pipeline in three steps:
+
+\begin{enumerate}
+    \item \textbf{Capture} — The webcam captures a 640$\times$480 BGR frame via OpenCV (\texttt{CameraService}).
+    \item \textbf{Detection} — The Haar Cascade classifier locates faces in the frame.
+    \item \textbf{Recognition} — The ArcFace embedding of the facial ROI is compared to stored templates.
+\end{enumerate}
+
+\screenshotplaceholder{Complete facial authentication pipeline}{pipeline-auth}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Face Detection — Haar Cascade}
+
+\subsection{Principle}
+
+Detection uses the Viola-Jones cascade classifier (\textbf{Haar Cascade}) provided by OpenCV. This detector scans the image at multiple scales applying Haar features to identify facial characteristics (eyes, nose, mouth).
+
+\subsection{Chosen Parameters}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcp{7cm}}
+        \toprule
+        \textbf{Parameter} & \textbf{Value} & \textbf{Justification} \\
+        \midrule
+        \texttt{scaleFactor}  & 1.2      & Trade-off between speed and sensitivity. A smaller value (1.05) would be more accurate but slower. \\
+        \texttt{minNeighbors} & 6        & Filters false positives: a face must be detected by at least 6 neighboring windows. \\
+        \texttt{minSize}      & (80, 80) & Ignores faces that are too small (distant or artifacts). \\
+        \bottomrule
+    \end{tabular}
+    \caption{Haar Cascade detector configuration}
+\end{table}
+
+\subsection{Preprocessing}
+
+Before detection, two operations are applied:
+\begin{enumerate}
+    \item \textbf{Grayscale Conversion} — \texttt{cv2.cvtColor(frame, COLOR\_BGR2GRAY)}
+    \item \textbf{Histogram Equalization} — \texttt{cv2.equalizeHist(gray)} to normalize contrast and improve robustness to lighting variations.
+\end{enumerate}
+
+\subsection{Choice Justification}
+
+\begin{successbox}[Why Haar Cascade?]
+\begin{itemize}[nosep]
+    \item \textbf{Speed} — Real-time execution on CPU, suitable for 30 FPS refresh rate.
+    \item \textbf{Reliability} — Proven model since 2001, robust under normal lighting conditions.
+    \item \textbf{Lightweight} — No GPU dependency, runs on any machine.
+    \item \textbf{Complementarity} — Fine-grained recognition is delegated to ArcFace in the second step.
+\end{itemize}
+\end{successbox}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Facial Recognition — ArcFace (InsightFace)}
+
+\subsection{Principle}
+
+ArcFace is a facial recognition model based on a deep convolutional neural network (\textbf{ResNet-50}). It transforms a 112$\times$112 face image into a \textbf{512-dimensional embedding vector}, normalized in L2 norm.
+
+The uniqueness of ArcFace lies in its loss function (\textit{Additive Angular Margin Loss}) which maximizes the angular margin between classes, producing highly discriminative embeddings.
+
+\subsection{Model Used}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Property} & \textbf{Value} \\
+        \midrule
+        Model           & \texttt{w600k\_r50.onnx} (\texttt{buffalo\_l} pack) \\
+        Architecture    & ResNet-50 \\
+        Input Size      & 112 $\times$ 112 pixels (BGR) \\
+        Embedding Size  & 512 dimensions (float32) \\
+        Normalization   & L2 (unit vector) \\
+        Runtime         & ONNX Runtime (CPU, \texttt{ctx\_id=-1}) \\
+        Model Size      & $\sim$280 MB (downloaded once) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Characteristics of the ArcFace model}
+\end{table}
+
+\subsection{Embedding Generation Process}
+
+\begin{lstlisting}[language=Python, caption={Building an ArcFace embedding}]
+def build_embedding(self, face_roi: np.ndarray) -> np.ndarray:
+    # 1. Resize to 112x112
+    resized = cv2.resize(face_roi, (112, 112)).astype(np.uint8)
+    # 2. Extract features via ArcFace model
+    raw_feat = model.get_feat(resized)
+    # 3. Flatten and convert to float32
+    vector = np.array(raw_feat).flatten().astype(np.float32)
+    # 4. Normalize to L2
+    norm = np.linalg.norm(vector)
+    return vector / norm if norm != 0 else vector
+\end{lstlisting}
+
+\subsection{Matching — Euclidean Distance}
+
+The comparison between the captured embedding and the stored templates uses the \textbf{Euclidean distance}:
+
+\begin{equation}
+    d(\mathbf{e}_1, \mathbf{e}_2) = \|\mathbf{e}_1 - \mathbf{e}_2\|_2 = \sqrt{\sum_{i=1}^{512} (e_{1,i} - e_{2,i})^2}
+\end{equation}
+
+For L2-normalized vectors, the Euclidean distance is related to the cosine similarity:
+\begin{equation}
+    d^2 = 2(1 - \cos\theta)
+\end{equation}
+
+\subsection{Decision Thresholds}
+
+The system uses a \textbf{dual-threshold strategy} to minimize false positives:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcl}
+        \toprule
+        \textbf{Threshold} & \textbf{Value} & \textbf{Decision} \\
+        \midrule
+        Strict Threshold (\textit{strict\_threshold}) & $\leq 0.75$ & \textcolor{accentgreen}{\textbf{Accepted}} — High confidence \\
+        Review Zone (\textit{review\_threshold}) & $0.75 < d \leq 0.90$ & \textcolor{orange}{\textbf{Rejected}} — Insufficient confidence \\
+        Beyond & $> 0.90$ & \textcolor{accentred}{\textbf{Unknown}} — No match \\
+        \bottomrule
+    \end{tabular}
+    \caption{Dual-threshold decision strategy}
+\end{table}
+
+The distance $\rightarrow$ confidence conversion is: $\text{confidence} = \max(0, \min(1, 1 - d/2))$
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Digital Watermarking — HMAC-SHA256}
+
+\subsection{Principle}
+
+Each authentication log is protected by a dual integrity mechanism:
+
+\begin{enumerate}
+    \item \textbf{SHA-256 Hash} — Payload fingerprint to detect any modification.
+    \item \textbf{HMAC-SHA256 Signature} — Cryptographic signature with a secret key to prove authenticity.
+\end{enumerate}
+
+\subsection{Payload Construction}
+
+\begin{lstlisting}[language=Python, caption={Watermarking an authentication log}]
+payload = "|".join([
+    user_name,        # "Alice Martin"
+    user_role,        # "Admin"
+    status,           # "Authorized"
+    f"{confidence:.4f}",  # "0.8523"
+    details,          # Matching message
+    timestamp.isoformat()  # "2026-05-02T21:30:00"
+])
+payload_hash = SHA256(payload)           # Fingerprint
+signature    = HMAC_SHA256(key, payload) # Watermark
+\end{lstlisting}
+
+\subsection{Integrity Verification}
+
+The \textit{Integrity Verification} panel in the admin dashboard recalculates the hashes and signatures of all logs to detect any alteration:
+
+\begin{lstlisting}[language=Python, caption={Log integrity verification}]
+computed_hash = SHA256(reconstructed_payload)
+hash_ok = (computed_hash == stored_hash)
+sign_ok = HMAC_verify(payload, stored_signature)
+integrity = hash_ok AND sign_ok
+\end{lstlisting}
+
+\subsection{Choice Justification}
+
+\begin{successbox}[Why HMAC-SHA256?]
+\begin{itemize}[nosep]
+    \item \textbf{Industry Standard} — Used in TLS, JWT, OAuth 2.0.
+    \item \textbf{Collision Resistance} — SHA-256 offers $2^{128}$ resistance.
+    \item \textbf{Authentication} — The secret key prevents forgery.
+    \item \textbf{Performance} — Instant calculation, no impact on UX.
+    \item \textbf{Non-alteration} — Any single-bit change invalidates the signature.
+\end{itemize}
+\end{successbox}
+
+\screenshotplaceholder{Integrity verification panel in the admin dashboard}{panneau-integrite}

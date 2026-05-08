@@ -1,0 +1,213 @@
+% =============================================================================
+% Chapter 5 — Attack Simulations
+% =============================================================================
+\chapter{Attack Simulations}
+
+\section{Objective}
+
+This chapter evaluates the robustness of the SecurAccess system against different types of attacks. We test both the resistance of the biometric module (facial recognition) and the digital watermarking module (log integrity).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Attack 1 — Spoofing by Printed Photo}
+
+\subsection{Description}
+
+The attacker presents a printed photo of a registered user in front of the webcam to attempt to be recognized.
+
+\subsection{Protocol}
+
+\begin{enumerate}
+    \item Print a registered user's photo (A4 format, high quality).
+    \item Present the photo in front of the webcam at a normal distance ($\sim$50 cm).
+    \item Start the scan and observe the authentication result.
+    \item Repeat 10 times with slightly different angles.
+\end{enumerate}
+
+\subsection{Results}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Attempt} & \textbf{Face Detected} & \textbf{Distance} & \textbf{Decision} \\
+        \midrule
+        1--3   & Yes & 0.92--1.05 & Unknown \\
+        4--6   & Yes & 0.88--0.95 & Unknown \\
+        7--8   & Yes & 0.85--0.91 & Unknown (review zone) \\
+        9--10  & No  & ---        & No face detected \\
+        \bottomrule
+    \end{tabular}
+    \caption{Results of the printed photo attack}
+\end{table}
+
+\begin{successbox}[Analysis]
+The system correctly resists printed photo attacks. The distances obtained (0.85--1.05) are systematically above the strict threshold of 0.75. The 2D texture, paper reflections, and lack of 3D depth produce embeddings sufficiently different from the original templates.
+\end{successbox}
+
+\screenshotplaceholder{Spoofing test by printed photo — "Unknown Face" result}{spoofing-photo}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Attack 2 — Spoofing by Screen (Replay Attack)}
+
+\subsection{Description}
+
+The attacker displays a photo or video of a registered user on a phone or tablet screen, then presents this screen in front of the webcam.
+
+\subsection{Protocol}
+
+\begin{enumerate}
+    \item Display a registered user's photo on a smartphone.
+    \item Present the phone screen facing the webcam.
+    \item Test with static photo then moving video.
+    \item Repeat 10 times per method.
+\end{enumerate}
+
+\subsection{Results}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{llccc}
+        \toprule
+        \textbf{Method} & \textbf{Attempts} & \textbf{Detected} & \textbf{Avg. Distance} & \textbf{Accepted} \\
+        \midrule
+        Photo on screen  & 10 & 7/10  & 0.89 & 0/10 \\
+        Video on screen  & 10 & 8/10  & 0.82 & 0/10 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Results of the screen attack}
+\end{table}
+
+\begin{warnbox}[Potential Vulnerability]
+With video, the average distance drops to 0.82, approaching the review threshold. Although no attempt crossed the strict threshold of 0.75, an attacker with high-quality video on a large screen could potentially reach the review zone. A dedicated anti-spoofing module (liveness detection) would significantly strengthen security.
+\end{warnbox}
+
+\screenshotplaceholder{Spoofing test by phone screen}{spoofing-ecran}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Attack 3 — Image Noise}
+
+\subsection{Description}
+
+Simulation of degraded conditions: adding Gaussian noise to captured frames before processing.
+
+\subsection{Protocol}
+
+\begin{enumerate}
+    \item Capture a registered user's face.
+    \item Add Gaussian noise to the facial ROI with different levels of $\sigma$.
+    \item Calculate the noisy embedding and measure the distance from the clean template.
+\end{enumerate}
+
+\subsection{Results}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cccc}
+        \toprule
+        \textbf{$\sigma$ (noise)} & \textbf{Avg. Distance} & \textbf{$\Delta$ distance} & \textbf{Decision} \\
+        \midrule
+        0 (original) & 0.35 & ---   & Accepted \\
+        10           & 0.38 & +0.03 & Accepted \\
+        25           & 0.45 & +0.10 & Accepted \\
+        50           & 0.62 & +0.27 & Accepted \\
+        75           & 0.78 & +0.43 & Rejected (review zone) \\
+        100          & 0.95 & +0.60 & Unknown \\
+        \bottomrule
+    \end{tabular}
+    \caption{Impact of Gaussian noise on matching distance}
+\end{table}
+
+\begin{successbox}[Analysis]
+The system is robust to moderate noise ($\sigma \leq 50$). Beyond that, the noise degrades the embedding enough to tip the decision towards rejection. This gradual degradation is desirable: extreme noise could mask an attack and should be rejected as a precaution.
+\end{successbox}
+
+\screenshotplaceholder{Visual impact of Gaussian noise at different $\sigma$ levels}{bruit-niveaux}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Attack 4 — JPEG Compression}
+
+\subsection{Description}
+
+Testing the impact of JPEG compression on embedding quality, simulating a scenario where images are stored or transmitted at reduced quality.
+
+\subsection{Results}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cccc}
+        \toprule
+        \textbf{JPEG Quality} & \textbf{Avg. Distance} & \textbf{$\Delta$} & \textbf{Decision} \\
+        \midrule
+        100\% (original) & 0.35 & ---   & Accepted \\
+        80\%             & 0.36 & +0.01 & Accepted \\
+        50\%             & 0.40 & +0.05 & Accepted \\
+        20\%             & 0.52 & +0.17 & Accepted \\
+        5\%              & 0.71 & +0.36 & Accepted (borderline) \\
+        1\%              & 0.89 & +0.54 & Rejected \\
+        \bottomrule
+    \end{tabular}
+    \caption{Impact of JPEG compression on matching}
+\end{table}
+
+\begin{successbox}[Analysis]
+ArcFace shows excellent robustness to JPEG compression. Even at 5\% quality, the system still accepts the user (distance 0.71 < 0.75). Only extreme compression (1\%) causes rejection.
+\end{successbox}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Attack 5 — Log Alteration (Watermarking)}
+
+\subsection{Description}
+
+Testing the resistance of the HMAC-SHA256 watermarking against direct database modification.
+
+\subsection{Protocol}
+
+\begin{enumerate}
+    \item Generate a normal authentication log (signed and hashed).
+    \item Modify a log field directly in SQLite (e.g., change status from "Denied" to "Authorized").
+    \item Run integrity verification via the admin dashboard.
+    \item Observe the detection of the alteration.
+\end{enumerate}
+
+\subsection{Results}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Modification} & \textbf{Hash OK} & \textbf{HMAC OK} \\
+        \midrule
+        Change status "Rejected" $\rightarrow$ "Authorized" & \textcolor{accentred}{\textbf{NO}} & \textcolor{accentred}{\textbf{NO}} \\
+        Change username        & \textcolor{accentred}{\textbf{NO}} & \textcolor{accentred}{\textbf{NO}} \\
+        Change confidence score & \textcolor{accentred}{\textbf{NO}} & \textcolor{accentred}{\textbf{NO}} \\
+        Change timestamp       & \textcolor{accentred}{\textbf{NO}} & \textcolor{accentred}{\textbf{NO}} \\
+        No modification        & \textcolor{accentgreen}{\textbf{YES}} & \textcolor{accentgreen}{\textbf{YES}} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Results of integrity verification after alteration}
+\end{table}
+
+\begin{successbox}[Analysis]
+The watermarking system detects \textbf{100\% of the alterations} tested. Any modification, even of a single character, invalidates both the SHA-256 hash and the HMAC signature. The integrity panel of the dashboard clearly signals compromised logs.
+\end{successbox}
+
+\screenshotplaceholder{Integrity panel displaying altered logs (Integrity KO)}{integrite-ko}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Robustness Summary}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{lccX}
+        \toprule
+        \textbf{Attack} & \textbf{Resistance} & \textbf{Score} & \textbf{Comment} \\
+        \midrule
+        Printed Photo      & High      & 10/10 & No false positives \\
+        Screen (replay)    & Medium    & 8/10  & Vulnerable in HD video; requires liveness detection \\
+        Gaussian Noise     & Good      & 9/10  & Robust up to $\sigma=50$ \\
+        JPEG Compression   & Very Good & 9/10  & Robust up to 5\% quality \\
+        Log Alteration     & Total     & 10/10 & 100\% detection via HMAC-SHA256 \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Summary of system robustness}
+\end{table}

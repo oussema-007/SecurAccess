@@ -1,0 +1,13 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/c:\\Users\\USER\\Downloads\\Biom-trie-et-tatouage-Project-master\\Biom-trie-et-tatouage-Project-master\\rapport_latex\\main.aux": true,
+        "**/c:\\Users\\USER\\Downloads\\Biom-trie-et-tatouage-Project-master\\Biom-trie-et-tatouage-Project-master\\rapport_latex\\main.log": true,
+        "**/c:\\Users\\USER\\Downloads\\Biom-trie-et-tatouage-Project-master\\Biom-trie-et-tatouage-Project-master\\rapport_latex\\main.gz": true,
+        "**/c:\\Users\\USER\\Downloads\\Biom-trie-et-tatouage-Project-master\\Biom-trie-et-tatouage-Project-master\\rapport_latex\\main.out": true
+    }
+}

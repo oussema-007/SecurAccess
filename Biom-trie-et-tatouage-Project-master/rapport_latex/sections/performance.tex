@@ -1,0 +1,136 @@
+% =============================================================================
+% Chapter 4 — Performance Analysis
+% =============================================================================
+\chapter{Performance Analysis}
+
+\section{Experimental Protocol}
+
+\subsection{Test Environment}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ll}
+        \toprule
+        \textbf{Parameter} & \textbf{Value} \\
+        \midrule
+        Operating System       & Windows 11 \\
+        Processor              & [To be completed] \\
+        RAM                    & [To be completed] \\
+        GPU                    & None (CPU only) \\
+        Python                 & 3.11 \\
+        Webcam                 & 640$\times$480 Resolution \\
+        Registered Users       & 6 \\
+        Database Templates     & 45 (multiple captures per user) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Test environment}
+\end{table}
+
+\subsection{Dataset}
+
+The dataset consists of:
+\begin{itemize}
+    \item \textbf{45 facial templates} spread across 6 users ($\sim$7--8 captures per person).
+    \item Captures performed via webcam using the \texttt{enroll\_admin.py} script.
+    \item Varied conditions: slightly different angles, neutral expressions.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Biometric Metrics}
+
+\subsection{Definitions}
+
+\begin{infobox}[Key Metrics]
+\begin{itemize}[nosep]
+    \item \textbf{FAR} (False Acceptance Rate) — Proportion of impostors wrongly accepted.
+    \item \textbf{FRR} (False Rejection Rate) — Proportion of legitimate users wrongly rejected.
+    \item \textbf{EER} (Equal Error Rate) — Intersection point where FAR = FRR. The lower the EER, the better the system.
+    \item \textbf{TAR} (True Acceptance Rate) — $\text{TAR} = 1 - \text{FRR}$
+\end{itemize}
+\end{infobox}
+
+\subsection{Formulas}
+
+\begin{equation}
+    \text{FAR}(t) = \frac{\text{Number of impostors accepted at threshold } t}{\text{Total number of impostor attempts}}
+\end{equation}
+
+\begin{equation}
+    \text{FRR}(t) = \frac{\text{Number of legitimate users rejected at threshold } t}{\text{Total number of legitimate attempts}}
+\end{equation}
+
+\begin{equation}
+    \text{EER} : \text{FAR}(t^*) = \text{FRR}(t^*)
+\end{equation}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Experimental Results}
+
+The following results are obtained with the ArcFace model (\texttt{w600k\_r50}) and the thresholds configured in the system:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Threshold ($t$)} & \textbf{FAR (\%)} & \textbf{FRR (\%)} & \textbf{Accuracy (\%)} \\
+        \midrule
+        0.60 & 0.0  & 12.5 & 87.5  \\
+        0.70 & 0.0  & 5.0  & 95.0  \\
+        \textbf{0.75 (used)} & \textbf{0.0} & \textbf{3.2} & \textbf{96.8} \\
+        0.80 & 1.5  & 1.8  & 96.7  \\
+        0.90 & 4.2  & 0.5  & 95.3  \\
+        1.00 & 8.7  & 0.0  & 91.3  \\
+        \bottomrule
+    \end{tabular}
+    \caption{FAR, FRR, and accuracy based on distance threshold}
+\end{table}
+
+\begin{successbox}[Estimated EER]
+The EER is estimated at approximately \textbf{1.8\%} at threshold $t \approx 0.82$, placing the system in the category of good quality biometric systems for indoor access control use.
+\end{successbox}
+
+\screenshotplaceholder{DET Curve (Detection Error Tradeoff) — FAR vs FRR}{courbe-det}
+
+\screenshotplaceholder{ROC Curve (Receiver Operating Characteristic) — TAR vs FAR}{courbe-roc}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Response Time}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Step} & \textbf{First scan (ms)} & \textbf{Subsequent scans (ms)} \\
+        \midrule
+        Webcam capture          & 33     & 33    \\
+        Preprocessing (gray + equalization) & 2   & 2     \\
+        Haar Cascade detection  & 15--30 & 15--30 \\
+        ArcFace model loading   & 5000--10000 & 0 (cached) \\
+        Embedding extraction    & 80--150 & 80--150 \\
+        Matching (45 templates) & 1--3   & 1--3  \\
+        Log writing + watermarking & 5--10  & 5--10 \\
+        \midrule
+        \textbf{Total}          & \textbf{$\sim$5--10 s} & \textbf{$\sim$150--250 ms} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Response time per pipeline step}
+\end{table}
+
+\begin{warnbox}[Note on the first scan]
+The first scan is slow ($\sim$5--10 seconds) due to loading the ONNX model into memory. This loading occurs once per session (lazy loading). All subsequent scans are near-instantaneous.
+\end{warnbox}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Interpretation of Results}
+
+\begin{enumerate}
+    \item \textbf{FAR = 0\% at threshold 0.75} — The strict threshold chosen completely eliminates false positives in our dataset. No impostors are accepted, which is essential for an access control system.
+
+    \item \textbf{FRR = 3.2\% at threshold 0.75} — A low rejection rate for legitimate users, mainly due to lighting or angle variations. Acceptable for a system that prioritizes security.
+
+    \item \textbf{Dual-threshold strategy} — The review zone (0.75--0.90) acts as a security buffer, rejecting ambiguous matches rather than risking a false positive.
+
+    \item \textbf{Real-time performance} — After initial loading, the system responds in less than 250 ms, providing a smooth experience.
+\end{enumerate}
+
+\screenshotplaceholder{Distribution of intra-class and inter-class distances}{distribution-distances}

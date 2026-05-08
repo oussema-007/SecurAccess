@@ -1,0 +1,42 @@
+% =============================================================================
+% Chapter 1 — Introduction
+% =============================================================================
+\chapter{Introduction}
+
+\section{Project Context}
+
+Biometric security today represents a major challenge in access control systems. Faced with the limitations of traditional methods (passwords, badges, PIN codes), facial recognition is establishing itself as a solution that is both ergonomic and secure.
+
+The \textbf{SecurAccess} project is part of the \textit{Biometrics and Digital Watermarking} module. It proposes a complete access control system based on facial recognition, integrating a digital watermarking mechanism to ensure the integrity of authentication logs.
+
+\section{Objectives}
+
+The main objectives of the project are:
+
+\begin{enumerate}[label=\arabic*.]
+    \item \textbf{Biometric Authentication} — Identify users via their faces in real-time using a webcam.
+    \item \textbf{Role Management} — Implement a hierarchical role system (Admin, Ultimate, Pro, User, Unauthorized) with granular access control.
+    \item \textbf{Digital Watermarking of Logs} — Ensure the integrity of authentication logs via HMAC-SHA256 signatures.
+    \item \textbf{Administration Dashboard} — Provide a comprehensive dashboard for managing users, logs, alerts, and registration requests.
+    \item \textbf{Attack Detection} — Analyze the system's robustness against spoofing, noise, and compression attacks.
+\end{enumerate}
+
+\section{Technologies Used}
+
+\begin{table}[H]
+    \centering
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        \textbf{Technology} & \textbf{Role} \\
+        \midrule
+        Python 3.11          & Main development language \\
+        PyQt5 5.15           & Desktop graphical interface (native widgets) \\
+        OpenCV 4.9           & Webcam capture and face detection (Haar Cascade) \\
+        InsightFace 0.7.3    & Facial embedding extraction via ArcFace model \\
+        ONNX Runtime         & ArcFace model inference on CPU \\
+        SQLite               & Local database for users, logs, and alerts \\
+        HMAC-SHA256          & Digital watermarking for log integrity \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Technology stack of the SecurAccess project}
+\end{table}

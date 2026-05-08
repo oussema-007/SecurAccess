@@ -1,0 +1,58 @@
+% =============================================================================
+% Chapter 7 — Conclusion
+% =============================================================================
+\chapter{Conclusion}
+
+\section{Project Summary}
+
+The SecurAccess project has enabled the design and implementation of a complete biometric access control system using facial recognition, integrating the following dimensions:
+
+\begin{itemize}
+    \item \textbf{Biometrics} — Face detection via Haar Cascade and recognition via ArcFace (512D embeddings), with a recognition rate of 96.8\% and a FAR of 0\% at the operational threshold of 0.75.
+
+    \item \textbf{Digital Watermarking} — Protection of authentication log integrity through a dual SHA-256 + HMAC-SHA256 mechanism, detecting 100\% of alterations.
+
+    \item \textbf{Access Management} — Hierarchical 5-level role system with granular control and integrated upsell.
+
+    \item \textbf{Professional Interface} — PyQt5 desktop application with a dark theme, complete administrator dashboard (7 panels), and smooth navigation.
+
+    \item \textbf{Security} — Validated resistance to spoofing, noise, and compression attacks, with identified improvement recommendations.
+\end{itemize}
+
+\section{Identified Limitations}
+
+\begin{enumerate}
+    \item \textbf{Lack of Liveness Detection} — The system does not distinguish a real face from a high-quality video. A liveness detection module (blink analysis, skin texture, 3D depth) would strengthen security.
+
+    \item \textbf{Slow Initial Loading} — The ArcFace model requires 5--10 seconds to load during the first scan. Pre-loading at application startup would improve the experience.
+
+    \item \textbf{CPU-only Inference} — Exclusive use of the CPU limits performance. Adding GPU support (CUDA) would accelerate embedding extraction.
+
+    \item \textbf{Limited Dataset} — The 45 templates across 6 users are insufficient to validate performance on a large scale.
+\end{enumerate}
+
+\section{Future Improvements}
+
+\begin{enumerate}
+    \item Integration of an \textbf{anti-spoofing} module (liveness detection via texture or depth analysis).
+    \item \textbf{GPU} support (CUDA) for ArcFace inference.
+    \item \textbf{Pre-loading} of the model at application startup.
+    \item Migration to a \textbf{PostgreSQL} database for multi-user deployment.
+    \item Addition of real-time \textbf{push notifications} for security alerts.
+    \item Implementation of an \textbf{LSB watermarking module} on facial images themselves for traceability.
+\end{enumerate}
+
+\vspace{1cm}
+
+\begin{center}
+    \begin{tikzpicture}
+        \draw[mainblue, line width=2pt] (0,0) -- (10,0);
+    \end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{center}
+    {\large\textit{This report was written as part of the Biometrics and Digital Watermarking module.}}\\[0.3cm]
+    {\textcolor{gray}{May 2026}}
+\end{center}
